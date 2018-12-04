@@ -16,10 +16,7 @@ python preprocess.py -train_src data/src-train.txt -train_tgt data/tgt-train.txt
 
 ### Generate embedding files:
 ```
-python embedding.py 
--embedding  <path to embedding txt file>
--dict data/data.{src,tgt}.dict 
--output data/{src,tgt}.840B.300d
+python embedding.py -embedding  <path to embedding txt file> -dict data/data.{src,tgt}.dict -output data/{src,tgt}.840B.300d
 ```
 
 ### Training:
