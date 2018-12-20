@@ -4,6 +4,7 @@ import random
 import math
 import re
 from nltk import word_tokenize
+from sklearn.model_selection import train_test_split
 
 # return a list of file names end with .json.gz
 def get_files(path):
@@ -16,8 +17,9 @@ def read_files(path):
     for file in files:
         with gzip.open(os.path.join(path, file), 'r') as g:
                 for l in g:
-                    yield eval(l)
-
+                    row = eval(l)
+                    row['category'] = file[3:].split('.')[0]
+                    yield row
 
 def clean_html(raw):
     cleantext = re.sub('<[^>]*>', '', raw)
@@ -30,15 +32,16 @@ def clean_html(raw):
 def read_lang(path):
     # data is a list of dictionaries, each dictionary contains answer and question as their keys
     data = list(read_files(path))
-
     #pairs: [ [ans0,qu0], [ans1, qu1], ..., [ansN, quN] ]
     pairs = []
+    categories = []
     for dic in data:
         atemp = word_tokenize(clean_html(dic.get('answer')))
         qtemp = word_tokenize(clean_html(dic.get('question')))
         if 10 <= len(atemp) < 100 and 4 <= len(qtemp) < 50:
             pairs.append([' '.join(atemp), ' '.join(qtemp)])
-    return pairs
+            categories.append(dic['category'])
+    return pairs,categories
 
 
 def write(pairs, src_name, tgt_name):
@@ -53,22 +56,21 @@ def write(pairs, src_name, tgt_name):
 
 def main():
     data_path = 'data/raw'
-    pairs = read_lang(data_path)
-
-    random.shuffle(pairs)
-    print 'total number of data: ', len(pairs)
-
-    train_percent = int(math.floor((80 * len(pairs)) / 100.0))
-    rest = len(pairs) - train_percent
-    validate_percent = rest // 2
-
-    training_pairs = pairs[:train_percent]
-    validating_pairs = pairs [train_percent: train_percent + validate_percent]
-    testing_pairs = pairs[train_percent + validate_percent:]
-
-    print 'number of training data: ', train_percent, len(training_pairs)
-    print 'number of validating data: ', validate_percent, len(validating_pairs)
-    print 'number of testing data: ', len(pairs) - (train_percent + validate_percent), len(testing_pairs)
+    pairs,categories = read_lang(data_path)
+    import pdb
+    pdb.set_trace()
+    print ('total number of data: ', len(pairs))
+    training_pairs, testing_pairs, y_train, y_test = train_test_split(pairs, categories,
+                                                    test_size=0.20,
+                                                    random_state=42,
+                                                    stratify=categories)
+    validating_pairs,testing_pairs,y_valid,y_test = train_test_split(testing_pairs,y_test,
+                                                    test_size=0.5,
+                                                    random_state=42,
+                                                    stratify=y_test)
+    print ('number of training data: ', '80%', len(training_pairs))
+    print ('number of validating data: ','10%', len(validating_pairs))
+    print ('number of testing data: ', '10%', len(testing_pairs))
 
     src_train = './data/processed/src-train.txt'
     tgt_train = './data/processed/tgt-train.txt'
