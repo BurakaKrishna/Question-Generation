@@ -101,7 +101,7 @@ class MemoryEfficientLoss:
     Class for best batchin the loss for NMT.
     """
     def __init__(self, opt, generator, crit,
-                 coverage_loss=False,
+                 coverage_loss=True,
                  eval=False):
         """
         Args:
@@ -149,7 +149,7 @@ class MemoryEfficientLoss:
 
         if self.coverage_loss:
             original["coverage_t"] = attns["coverage"]
-
+            original["attn"] = attns["std"]
 
         shards, dummies = shardVariables(original, self.max_batches, self.eval)
 
@@ -158,12 +158,9 @@ class MemoryEfficientLoss:
         for s in shards:
             loss_t, scores_t = self.compute_std_loss(bottle(s["out_t"]),
                                                      s["targ_t"])
-
-
             if self.coverage_loss:
-                loss_t += self.lambda_coverage * torch.min(s["coverage"],
+                loss_t += self.lambda_coverage * torch.min(s["coverage_t"],
                                                            s["attn"]).sum()
-
             stats.update(self.score(loss_t, scores_t, s["targ_t"]))
             if not self.eval:
                 loss_t.div(batch.batchSize).backward()
