@@ -21,7 +21,7 @@ python embedding.py -embedding  <path to embedding txt file> -dict data/data.{sr
 
 ### Training:
 ```
-python train.py -data data/data.train.pt -save_model model/model -coverage_attn - -brnn -rnn_size 600 -word_vec_size 300 -epochs 20 -start_decay_at 10 -layers 2 -pre_word_vecs_enc data/src.840B.300d -pre_word_vecs_dec data/tgt.840B.300d
+python train.py -data data/data.train.pt -save_model model/model -coverage_attn -attention_type general -lambda_coverage 1 -brnn -rnn_size 600 -word_vec_size 300 -epochs 20 -start_decay_at 10 -layers 2 -pre_word_vecs_enc data/src.840B.300d -pre_word_vecs_dec data/tgt.840B.300d
 ```
 Use -gpus if a GPU is available.
 Use nohup command if it takes lot of time to train
